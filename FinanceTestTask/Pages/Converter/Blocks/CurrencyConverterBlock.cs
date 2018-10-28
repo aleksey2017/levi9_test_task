@@ -34,12 +34,6 @@ namespace FinanceTestTask.Pages
         [FindsBy(How = How.XPath, Using = "//*[@id='converter_bank']")]
         private IWebElement converterBank { get; set; }
 
-        [FindsBy(How = How.XPath, Using = "//div[@id='form_converter_result']/p[@id='UAH']/input[@id='currency_exchange']")]
-        private IWebElement converterResultUA { get; set; }
-
-        [FindsBy(How = How.XPath, Using = "//div[@id='form_converter_result']/p[@id='UAH']/input[@id='currency_rate']")]
-        private IWebElement currencyRate { get; set; }
-
         public ResultsBlock FillForm(string exchangeAmount, string сurrencyName, string byOrSale, string bank)
         {
             InputCurrencyAmount(exchangeAmount);

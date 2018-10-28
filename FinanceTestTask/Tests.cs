@@ -2,6 +2,8 @@
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using System;
+using System.Linq;
 
 namespace FinanceTestTask
 {
@@ -15,6 +17,7 @@ namespace FinanceTestTask
         {
             driver = new ChromeDriver();
             driver.Manage().Window.Maximize();
+            //driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
         }
 
         [TearDown]
@@ -27,10 +30,19 @@ namespace FinanceTestTask
         public void IsSaleRateHigherThanBuyRateAllBanks()
         {
             MainPage mainPage = new MainPage(driver);
+
             mainPage.GoToPage();
-            mainPage.GetCurrencyFilterBlock().SelectCurrency("USD").ListOfBanks.IsSaleHigherThanBuy();
-            mainPage.GetCurrencyFilterBlock().SelectCurrency("EUR").ListOfBanks.IsSaleHigherThanBuy();
-            mainPage.GetCurrencyFilterBlock().SelectCurrency("RUB").ListOfBanks.IsSaleHigherThanBuy();
+
+            FilterByCurrencyBlock filter = mainPage.GetCurrencyFilterBlock();
+
+            filter.SelectCurrency("USD");
+            mainPage.GetRatesTableBlock().IsSaleHigherThanBuy();
+
+            filter.SelectCurrency("EUR");
+            mainPage.GetRatesTableBlock().IsSaleHigherThanBuy();
+
+            filter.SelectCurrency("RUB");
+            mainPage.GetRatesTableBlock().IsSaleHigherThanBuy();
         }
 
         [TestCase("1000", "USD", "SALE", "Аркада")]
@@ -39,8 +51,31 @@ namespace FinanceTestTask
         public void CheckConvertedAmountFor(string exchangeAmount, string сurrencyName, string byOrSale, string bank)
         {
             ConverterPage converterPage = new ConverterPage(driver);
+
             converterPage.GoToPage();
-            converterPage.GetConverterBlock().FillForm(exchangeAmount, сurrencyName, byOrSale, bank).IsConvertedAmountCorrect();
+
+            CurrencyConverterBlock converterForm = converterPage.GetConverterBlock();
+
+            converterForm.FillForm(exchangeAmount, сurrencyName, byOrSale, bank).IsConvertedAmountCorrect();
+        }
+
+        [Test]
+        public void SortByBankNameDesc()
+        {
+            MainPage mainPage = new MainPage(driver);
+
+            mainPage.GoToPage();
+
+            RatesTableBlock ratesTable = mainPage.GetRatesTableBlock();
+
+            var banksTableBeforeSort = ratesTable.GetCurrentExchangeRatesOfBanksTable();
+
+            ratesTable.SortByBankNameColumn("DESC");
+
+            var expectedResult = banksTableBeforeSort.OrderByDescending(i => i.Key);
+            var actualResult = ratesTable.GetCurrentExchangeRatesOfBanksTable();
+
+            Assert.True(expectedResult.Select(e => e.Key).SequenceEqual(actualResult.Select(a => a.Key)));
         }
     }
 }

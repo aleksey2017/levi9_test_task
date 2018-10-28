@@ -7,17 +7,20 @@ using System.Linq;
 
 namespace FinanceTestTask.Pages
 {
-    public class RatesTableBodyBlock
+    public class RatesTableBlock
     {
         private readonly IWebDriver driver;
         private string SelectedCurrency { get; set; }
 
-        public RatesTableBodyBlock(IWebDriver browser, string currency)
+        public RatesTableBlock(IWebDriver browser)
         {
-            driver = browser;
-            SelectedCurrency = currency;
+            driver = browser;            
             PageFactory.InitElements(driver, this);
+            SelectedCurrency = GetSelectedCurrency();
         }
+
+        [FindsBy(How = How.XPath, Using = "//*[@id='latest_currency_container']/thead")]
+        private IWebElement RateTableHeader { get; set; }
 
         [FindsBy(How = How.XPath, Using = "//tbody[@class='bank_rates_usd']")]
         private IWebElement RateTableUSD { get; set; }
@@ -40,25 +43,64 @@ namespace FinanceTestTask.Pages
             }
         }
 
-        public Dictionary<string, Double> GetMinValues()
+        public void SortByBankNameColumn(string ascOrDesc)
         {
-            List<double> ratesListForBuy = new List<double>();
-            List<double> ratesListForSell = new List<double>();
+            SetUpSorting(ascOrDesc, By.ClassName("col-bank"));
+        }
 
-            Dictionary<string, Double> countersMinMax = new Dictionary<string, double>();
+        public void SortByBuyColumn(string ascOrDesc)
+        {
+            SetUpSorting(ascOrDesc, By.ClassName("col-buy"));
+        }
 
-            var BanksRatesTable = GetRateTable(SelectedCurrency);            
+        public void SortBySaleColumn(string ascOrDesc)
+        {
+            SetUpSorting(ascOrDesc, By.ClassName("col-sale"));
+        }
 
-            foreach (var bank in BanksRatesTable)
+        public Dictionary<string, Dictionary<string, string>> GetCurrentExchangeRatesOfBanksTable()
+        {
+            return GetRateTable(SelectedCurrency);
+        }
+
+        private string GetCurrentSorting(IWebElement columnName)
+        {
+            switch (columnName.GetAttribute("aria-sort"))
             {
-                ratesListForBuy.Add(double.Parse(bank.Value["Buy"]));
-                ratesListForSell.Add(double.Parse(bank.Value["Sell"]));
+                case "ascending":
+                    return "ASC";
+                case "descending":
+                    return "DESC";
+                default:
+                    return "NONE";
             }
+        }
 
-            countersMinMax.Add("Buy", ratesListForBuy.ToArray().Min());
-            countersMinMax.Add("Sell", ratesListForSell.ToArray().Min());
+        private void SetUpSorting(string direction, By locator)
+        {
+            var colunmName = RateTableHeader.FindElement(locator);
 
-            return countersMinMax;
+            switch (direction)
+            {
+                case "ASC":
+                    while (GetCurrentSorting(colunmName) != "ASC")
+                    {
+                        colunmName.Click();
+                    }
+                    break;
+                case "DESC":
+                    while (GetCurrentSorting(colunmName) != "DESC")
+                    {
+                        colunmName.Click();
+                    }
+                    break;
+            }
+        }
+
+        private string GetSelectedCurrency()
+        {
+            var filterBlock = new FilterByCurrencyBlock(driver);
+            return filterBlock.CurrentCurrency;
         }
 
         private Dictionary<string, Dictionary<string, string>> GetRateTable(string selectedCurrency)

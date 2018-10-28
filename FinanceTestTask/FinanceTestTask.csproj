@@ -58,7 +58,6 @@
     <Compile Include="Pages\Converter\Blocks\CurrencyConverterBlock.cs" />
     <Compile Include="Pages\Converter\Blocks\ResultsBlock.cs" />
     <Compile Include="Pages\Main\Blocks\FilterByCurrencyBlock.cs" />
-    <Compile Include="Helpers\RatesTableHelper.cs" />
     <Compile Include="Pages\Main\Blocks\RatesTableBodyBlock.cs" />
     <Compile Include="Tests.cs" />
     <Compile Include="Pages\Converter\Pages\ConverterPage.cs" />
